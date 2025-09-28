@@ -29,7 +29,8 @@ async def to_code(config):
     await i2c.register_i2c_device(var, config)
     cg.add(var.set_odr(config["odr_hz"]))
 
-    for k in ("accel_x","accel_y","accel_z","gyro_x","gyro_y","gyro_z"):
-        if k in config:
-            s = await sensor.new_sensor(config[k])
-            cg.add(getattr(var, k).set_parent(s))
+for k in ("accel_x","accel_y","accel_z","gyro_x","gyro_y","gyro_z"):
+    if k in config:
+        s = await sensor.new_sensor(config[k])
+        # call C++ setter e.g. set_accel_x(...)
+        cg.add(getattr(var, f"set_{k}")(s))

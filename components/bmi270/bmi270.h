@@ -8,6 +8,13 @@ namespace bmi270 {
 
 class BMI270Component : public PollingComponent, public i2c::I2CDevice {
  public:
+  void set_accel_x(sensor::Sensor *s) { accel_x = s; }
+  void set_accel_y(sensor::Sensor *s) { accel_y = s; }
+  void set_accel_z(sensor::Sensor *s) { accel_z = s; }
+  void set_gyro_x(sensor::Sensor *s)  { gyro_x  = s; }
+  void set_gyro_y(sensor::Sensor *s)  { gyro_y  = s; }
+  void set_gyro_z(sensor::Sensor *s)  { gyro_z  = s; }
+
   sensor::Sensor *accel_x{nullptr}, *accel_y{nullptr}, *accel_z{nullptr};
   sensor::Sensor *gyro_x{nullptr},  *gyro_y{nullptr},  *gyro_z{nullptr};
 
