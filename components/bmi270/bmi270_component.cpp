@@ -10,63 +10,59 @@ namespace bmi270 {
 static const char *const TAG = "bmi270";
 
 static const char* bmi2_errstr(int8_t r) {
-  switch (r) {
-    case BMI2_OK: return "OK";
+  if (r == BMI2_OK) return "OK";
 
-    #ifdef BMI2_E_NULL_PTR
-    case BMI2_E_NULL_PTR: return "NULL_PTR";
-    #endif
+  #ifdef BMI2_E_NULL_PTR
+  if (r == BMI2_E_NULL_PTR) return "NULL_PTR";
+  #endif
 
-    #ifdef BMI2_E_COM_FAIL
-    case BMI2_E_COM_FAIL: return "COM_FAIL";
-    #endif
+  #ifdef BMI2_E_COM_FAIL
+  if (r == BMI2_E_COM_FAIL) return "COM_FAIL";
+  #endif
 
-    #ifdef BMI2_E_DEV_NOT_FOUND
-    case BMI2_E_DEV_NOT_FOUND: return "DEV_NOT_FOUND";
-    #endif
+  #ifdef BMI2_E_DEV_NOT_FOUND
+  if (r == BMI2_E_DEV_NOT_FOUND) return "DEV_NOT_FOUND";
+  #endif
 
-    #ifdef BMI2_E_INVALID_SENSOR
-    case BMI2_E_INVALID_SENSOR: return "INVALID_SENSOR";
-    #endif
+  #ifdef BMI2_E_INVALID_SENSOR
+  if (r == BMI2_E_INVALID_SENSOR) return "INVALID_SENSOR";
+  #endif
 
-    // Config-load errors (name differs by version)
-    #ifdef BMI2_E_CONFIG_LOAD
-    case BMI2_E_CONFIG_LOAD: return "CONFIG_LOAD";
-    #endif
-    #ifdef BMI2_E_CFG_LOAD
-    case BMI2_E_CFG_LOAD: return "CFG_LOAD";
-    #endif
+  #ifdef BMI2_E_CONFIG_LOAD
+  if (r == BMI2_E_CONFIG_LOAD) return "CONFIG_LOAD";
+  #endif
+  #ifdef BMI2_E_CFG_LOAD
+  if (r == BMI2_E_CFG_LOAD) return "CFG_LOAD";
+  #endif
 
-    // Init errors (name differs by version)
-    #ifdef BMI2_NOT_INIT
-    case BMI2_NOT_INIT: return "NOT_INIT";
-    #endif
-    #ifdef BMI2_E_INIT
-    case BMI2_E_INIT: return "INIT";
-    #endif
+  #ifdef BMI2_NOT_INIT
+  if (r == BMI2_NOT_INIT) return "NOT_INIT";
+  #endif
+  #ifdef BMI2_E_INIT
+  if (r == BMI2_E_INIT) return "INIT";
+  #endif
 
-    #ifdef BMI2_E_INVALID_PAGE
-    case BMI2_E_INVALID_PAGE: return "INVALID_PAGE";
-    #endif
+  #ifdef BMI2_E_INVALID_PAGE
+  if (r == BMI2_E_INVALID_PAGE) return "INVALID_PAGE";
+  #endif
 
-    #ifdef BMI2_E_INVALID_INPUT
-    case BMI2_E_INVALID_INPUT: return "INVALID_INPUT";
-    #endif
+  #ifdef BMI2_E_INVALID_INPUT
+  if (r == BMI2_E_INVALID_INPUT) return "INVALID_INPUT";
+  #endif
 
-    #ifdef BMI2_E_INVALID_ODR
-    case BMI2_E_INVALID_ODR: return "INVALID_ODR";
-    #endif
+  #ifdef BMI2_E_INVALID_ODR
+  if (r == BMI2_E_INVALID_ODR) return "INVALID_ODR";
+  #endif
 
-    #ifdef BMI2_E_INVALID_PARAM
-    case BMI2_E_INVALID_PARAM: return "INVALID_PARAM";
-    #endif
+  #ifdef BMI2_E_INVALID_PARAM
+  if (r == BMI2_E_INVALID_PARAM) return "INVALID_PARAM";
+  #endif
 
-    #ifdef BMI2_E_SELF_TEST_FAIL
-    case BMI2_E_SELF_TEST_FAIL: return "SELF_TEST_FAIL";
-    #endif
+  #ifdef BMI2_E_SELF_TEST_FAIL
+  if (r == BMI2_E_SELF_TEST_FAIL) return "SELF_TEST_FAIL";
+  #endif
 
-    default: return "UNKNOWN";
-  }
+  return "UNKNOWN";
 }
 
 // ---------- Bosch callback trampolines ----------
