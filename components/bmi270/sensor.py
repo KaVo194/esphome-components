@@ -1,6 +1,7 @@
 import esphome.codegen as cg
 import esphome.config_validation as cv
 from esphome.components import i2c, sensor
+from esphome.const import CONF_ID  # <-- this is the key
 
 DEPENDENCIES = ["i2c"]
 
@@ -9,7 +10,7 @@ BMI270Component = bmi270_ns.class_("BMI270Component", cg.PollingComponent, i2c.I
 
 CONFIG_SCHEMA = (
     cv.Schema({
-        cv.GenerateID(): cv.declare_id(BMI270Component),
+        cv.GenerateID(): cv.declare_id(BMI270Component),  # id field
         cv.Optional("odr_hz", default=100): cv.int_range(min=12, max=1600),
         cv.Optional("accel_x"): sensor.sensor_schema(unit_of_measurement="m/s²"),
         cv.Optional("accel_y"): sensor.sensor_schema(unit_of_measurement="m/s²"),
@@ -23,7 +24,7 @@ CONFIG_SCHEMA = (
 )
 
 async def to_code(config):
-    var = cg.new_Pvariable(config[cg.CONF_ID])
+    var = cg.new_Pvariable(config[CONF_ID])  # <-- use CONF_ID from esphome.const
     await cg.register_component(var, config)
     await i2c.register_i2c_device(var, config)
     cg.add(var.set_odr(config["odr_hz"]))
