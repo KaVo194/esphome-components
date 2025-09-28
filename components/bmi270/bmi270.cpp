@@ -1,5 +1,5 @@
-#include "esphome/core/log.h"
 #include"esphome/core/hal.h"
+#include "esphome/core/log.h"
 #include"esphome/core/log.h"
 #include "bmi270.h"
 #include <cstring>
@@ -20,7 +20,7 @@ int8_t BMI270Component::cb_write(uint8_t reg, const uint8_t *data, uint32_t len,
   return self->write_regs_(reg, data, len);
 }
 void BMI270Component::cb_delay_us(uint32_t us, void *) {
-  delayMicroseconds(us);
+  delayMicroseconds(us);  // from esphome/core/hal.h
 }
 
 // ---------- Low-level I2C helpers ----------
@@ -120,9 +120,7 @@ void BMI270Component::setup() {
 // ---------- Update ----------
 void BMI270Component::update() {
   bmi2_sens_data data{};
-  uint8_t sens_list[2] = { BMI2_ACCEL, BMI2_GYRO };
-
-  int8_t rslt = bmi2_get_sensor_data(&data, sens_list, 2, &dev_);
+  int8_t rslt = bmi2_get_sensor_data(&data, &dev_);  // <— no sensor-list arg
   if (rslt != BMI2_OK) {
     ESP_LOGW(TAG, "bmi2_get_sensor_data failed: %d", rslt);
     return;
@@ -139,6 +137,5 @@ void BMI270Component::update() {
   if (gyro_y)  gyro_y->publish_state(to_dps(data.gyr.y));
   if (gyro_z)  gyro_z->publish_state(to_dps(data.gyr.z));
 }
-
 }  // namespace bmi270
 }  // namespace esphome
