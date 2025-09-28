@@ -4,9 +4,9 @@
 #include "esphome/components/sensor/sensor.h"
 
 extern "C" {
-  #include "bosch/bmi2.h"
-  #include "bosch/bmi270.h"
-  #include "bosch/bmi270_config_file.h"
+  #include "bmi2.h"
+  #include "bmi270.h"
+  #include "bmi270_config_file.h"
 }
 
 namespace esphome {
