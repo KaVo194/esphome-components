@@ -61,8 +61,9 @@ uint8_t BMI270Component::map_gyr_odr_(uint16_t hz) const {
 }
 
 void BMI270Component::setup() {
-  ESP_LOGI(TAG, "Setting up BMI270...");
+  ESP_LOGI(TAG, "Setting up BMI270 (no external config load)...");
 
+  // 1) Hook Bosch API to our I2C and delays
   dev_.intf           = BMI2_I2C_INTF;
   dev_.intf_ptr       = this;
   dev_.read           = &BMI270Component::cb_read;
@@ -70,32 +71,67 @@ void BMI270Component::setup() {
   dev_.delay_us       = &BMI270Component::cb_delay_us;
   dev_.read_write_len = 64;
 
+  // (Optional) read chip-id for sanity
+  uint8_t reg = 0x00, id = 0;
+  if (!this->write(&reg, 1) || !this->read(&id, 1)) {
+    ESP_LOGE(TAG, "I2C chip-id read failed");
+    this->mark_failed();
+    return;
+  }
+  ESP_LOGI(TAG, "Chip ID: 0x%02X (expect 0x24)", id);
+
+  // 2) Init the device
   int8_t rslt = bmi270_init(&dev_);
-  if (rslt != BMI2_OK) { ESP_LOGE(TAG, "bmi270_init failed: %d", rslt); this->mark_failed(); return; }
+  if (rslt != BMI2_OK) {
+    ESP_LOGE(TAG, "bmi270_init failed: %d", rslt);
+    this->mark_failed();
+    return;
+  }
 
-  rslt = bmi270_load_config_file(&dev_);   // ← use the one you confirmed exists
-  if (rslt != BMI2_OK) { ESP_LOGE(TAG, "load_config_file failed: %d", rslt); this->mark_failed(); return; }
-
+  // 3) Enable accel + gyro
   uint8_t sens_list[2] = { BMI2_ACCEL, BMI2_GYRO };
   rslt = bmi2_sensor_enable(sens_list, 2, &dev_);
-  if (rslt != BMI2_OK) { ESP_LOGE(TAG, "sensor_enable failed: %d", rslt); this->mark_failed(); return; }
+  if (rslt != BMI2_OK) {
+    ESP_LOGE(TAG, "sensor_enable failed: %d", rslt);
+    this->mark_failed();
+    return;
+  }
 
-  ESP_LOGI(TAG, "BMI270 setup complete!");
+  // 4) Configure ranges/ODR
+  bmi2_sens_config cfg[2]{};
+  cfg[0].type = BMI2_ACCEL;
+  cfg[1].type = BMI2_GYRO;
+
+  rslt = bmi2_get_sensor_config(cfg, 2, &dev_);
+  if (rslt != BMI2_OK) { ESP_LOGE(TAG, "get_config failed: %d", rslt); this->mark_failed(); return; }
+
+  // Accel: ±2g, bandwidth & ODR
+  cfg[0].cfg.acc.range = BMI2_ACC_RANGE_2G;
+  cfg[0].cfg.acc.bwp   = BMI2_ACC_OSR4_AVG1;
+  cfg[0].cfg.acc.odr   = map_acc_odr_(odr_hz_);
+
+  // Gyro: ±2000 dps, bandwidth & ODR
+  cfg[1].cfg.gyr.range = BMI2_GYR_RANGE_2000;
+  cfg[1].cfg.gyr.bwp   = BMI2_GYR_OSR4_MODE;
+  cfg[1].cfg.gyr.odr   = map_gyr_odr_(odr_hz_);
+
+  rslt = bmi2_set_sensor_config(cfg, 2, &dev_);
+  if (rslt != BMI2_OK) { ESP_LOGE(TAG, "set_config failed: %d", rslt); this->mark_failed(); return; }
+
+  ESP_LOGI(TAG, "BMI270 setup complete (no config file).");
 }
 
 // ---------- Update ----------
 void BMI270Component::update() {
   bmi2_sens_data data{};
-
-  int8_t rslt = bmi2_get_sensor_data(&data, &dev_);   // ✅ correct signature
+  int8_t rslt = bmi2_get_sensor_data(&data, &dev_);
   if (rslt != BMI2_OK) {
     ESP_LOGW(TAG, "bmi2_get_sensor_data failed: %d", rslt);
     return;
   }
 
-  // Convert raw → SI units (adjust scales if you change ranges)
-  auto to_ms2 = [](int16_t raw) -> float { return (raw / 16384.0f) * 9.80665f; };
-  auto to_dps = [](int16_t raw) -> float { return (raw / 16.4f); };
+  auto to_ms2 = [](int16_t r){ return (r / 16384.0f) * 9.80665f; }; // ±2g
+  auto to_dps = [](int16_t r){ return (r / 16.4f); };               // ±2000 dps
 
   if (accel_x) accel_x->publish_state(to_ms2(data.acc.x));
   if (accel_y) accel_y->publish_state(to_ms2(data.acc.y));
