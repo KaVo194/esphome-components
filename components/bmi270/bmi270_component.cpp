@@ -9,6 +9,23 @@ namespace bmi270 {
 
 static const char *const TAG = "bmi270";
 
+static const char* bmi2_errstr(int8_t r) {
+  switch (r) {
+    case BMI2_OK: return "OK";
+    case BMI2_E_NULL_PTR: return "NULL_PTR";
+    case BMI2_E_COM_FAIL: return "COM_FAIL";
+    case BMI2_E_DEV_NOT_FOUND: return "DEV_NOT_FOUND";
+    case BMI2_E_INVALID_SENSOR: return "INVALID_SENSOR";
+    case BMI2_E_CFG_LOAD: return "CFG_LOAD";
+    case BMI2_E_INIT: return "INIT";
+    case BMI2_E_SELF_TEST_FAIL: return "SELF_TEST_FAIL";
+    case BMI2_E_INVALID_INPUT: return "INVALID_INPUT";
+    case BMI2_E_INVALID_ODR: return "INVALID_ODR";
+    case BMI2_E_INVALID_PARAM: return "INVALID_PARAM";
+    default: return "UNKNOWN";
+  }
+}
+
 // ---------- Bosch callback trampolines ----------
 int8_t BMI270Component::cb_read(uint8_t reg, uint8_t *data, uint32_t len, void *intf_ptr) {
   auto *self = static_cast<BMI270Component *>(intf_ptr);
@@ -63,7 +80,6 @@ uint8_t BMI270Component::map_gyr_odr_(uint16_t hz) const {
 void BMI270Component::setup() {
   ESP_LOGI(TAG, "Setting up BMI270 (no external config load)...");
 
-  // 1) Hook Bosch API to our I2C and delays
   dev_.intf           = BMI2_I2C_INTF;
   dev_.intf_ptr       = this;
   dev_.read           = &BMI270Component::cb_read;
@@ -71,54 +87,57 @@ void BMI270Component::setup() {
   dev_.delay_us       = &BMI270Component::cb_delay_us;
   dev_.read_write_len = 64;
 
-  // (Optional) read chip-id for sanity
+  // Optional: chip id sanity (0x24 expected)
   uint8_t reg = 0x00, id = 0;
   if (!this->write(&reg, 1) || !this->read(&id, 1)) {
-    ESP_LOGE(TAG, "I2C chip-id read failed");
+    ESP_LOGE(TAG, "I2C chip-id read failed (COM_FAIL)");
     this->mark_failed();
     return;
   }
   ESP_LOGI(TAG, "Chip ID: 0x%02X (expect 0x24)", id);
-
-  // 2) Init the device
-  int8_t rslt = bmi270_init(&dev_);
-  if (rslt != BMI2_OK) {
-    ESP_LOGE(TAG, "bmi270_init failed: %d", rslt);
+  if (id != 0x24) {
+    ESP_LOGE(TAG, "Unexpected chip id -> wrong address/wiring?");
     this->mark_failed();
     return;
   }
 
-  // 3) Enable accel + gyro
+  // (Optional but helps) soft reset then small delay
+  int8_t rslt = bmi2_soft_reset(&dev_);
+  ESP_LOGI(TAG, "soft_reset -> %d (%s)", rslt, bmi2_errstr(rslt));
+  this->cb_delay_us(5000, nullptr);
+
+  // Init
+  rslt = bmi270_init(&dev_);
+  ESP_LOGI(TAG, "bmi270_init -> %d (%s)", rslt, bmi2_errstr(rslt));
+  if (rslt != BMI2_OK) { this->mark_failed(); return; }
+
+  // Enable accel + gyro
   uint8_t sens_list[2] = { BMI2_ACCEL, BMI2_GYRO };
   rslt = bmi2_sensor_enable(sens_list, 2, &dev_);
-  if (rslt != BMI2_OK) {
-    ESP_LOGE(TAG, "sensor_enable failed: %d", rslt);
-    this->mark_failed();
-    return;
-  }
+  ESP_LOGI(TAG, "sensor_enable(accel,gyro) -> %d (%s)", rslt, bmi2_errstr(rslt));
+  if (rslt != BMI2_OK) { this->mark_failed(); return; }
 
-  // 4) Configure ranges/ODR
+  // Get, tweak, set config
   bmi2_sens_config cfg[2]{};
-  cfg[0].type = BMI2_ACCEL;
-  cfg[1].type = BMI2_GYRO;
+  cfg[0].type = BMI2_ACCEL; cfg[1].type = BMI2_GYRO;
 
   rslt = bmi2_get_sensor_config(cfg, 2, &dev_);
-  if (rslt != BMI2_OK) { ESP_LOGE(TAG, "get_config failed: %d", rslt); this->mark_failed(); return; }
+  ESP_LOGI(TAG, "get_sensor_config -> %d (%s)", rslt, bmi2_errstr(rslt));
+  if (rslt != BMI2_OK) { this->mark_failed(); return; }
 
-  // Accel: ±2g, bandwidth & ODR
   cfg[0].cfg.acc.range = BMI2_ACC_RANGE_2G;
   cfg[0].cfg.acc.bwp   = BMI2_ACC_OSR4_AVG1;
   cfg[0].cfg.acc.odr   = map_acc_odr_(odr_hz_);
 
-  // Gyro: ±2000 dps, bandwidth & ODR
   cfg[1].cfg.gyr.range = BMI2_GYR_RANGE_2000;
   cfg[1].cfg.gyr.bwp   = BMI2_GYR_OSR4_MODE;
   cfg[1].cfg.gyr.odr   = map_gyr_odr_(odr_hz_);
 
   rslt = bmi2_set_sensor_config(cfg, 2, &dev_);
-  if (rslt != BMI2_OK) { ESP_LOGE(TAG, "set_config failed: %d", rslt); this->mark_failed(); return; }
+  ESP_LOGI(TAG, "set_sensor_config -> %d (%s)", rslt, bmi2_errstr(rslt));
+  if (rslt != BMI2_OK) { this->mark_failed(); return; }
 
-  ESP_LOGI(TAG, "BMI270 setup complete (no config file).");
+  ESP_LOGI(TAG, "BMI270 setup complete.");
 }
 
 // ---------- Update ----------
