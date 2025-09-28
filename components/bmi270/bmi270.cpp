@@ -2,6 +2,7 @@
 #include "esphome/core/log.h"
 #include <cstring>
 #include <cmath>
+#include "Arduino.h" 
 
 namespace esphome {
 namespace bmi270 {
@@ -17,9 +18,8 @@ int8_t BMI270Component::cb_write(uint8_t reg, const uint8_t *data, uint32_t len,
   auto *self = static_cast<BMI270Component *>(intf_ptr);
   return self->write_regs_(reg, data, len);
 }
-void BMI270Component::cb_delay_us(uint32_t us, void * /*intf_ptr*/) {
-  // ESPHome delay is ms; round up
-  delay((us + 999) / 1000);
+void BMI270Component::cb_delay_us(uint32_t us, void *) {
+  delayMicroseconds(us);
 }
 
 // ---------- Low-level I2C helpers ----------
@@ -119,21 +119,17 @@ void BMI270Component::setup() {
 // ---------- Update ----------
 void BMI270Component::update() {
   bmi2_sens_data data{};
-  data.type = BMI2_ACCEL | BMI2_GYRO;
+  uint8_t sens_list[2] = { BMI2_ACCEL, BMI2_GYRO };
 
-  int8_t rslt = bmi2_get_sensor_data(&data, &dev_);
+  int8_t rslt = bmi2_get_sensor_data(&data, sens_list, 2, &dev_);
   if (rslt != BMI2_OK) {
-    ESP_LOGW(TAG, "get_sensor_data failed: %d", rslt);
+    ESP_LOGW(TAG, "bmi2_get_sensor_data failed: %d", rslt);
     return;
   }
 
-  // Scale raw -> SI units
-  // NOTE: Confirm LSB/scale from Bosch docs for your chosen ranges.
-  // Common values (same as BMI160):
-  //  accel ±2g  => 16384 LSB/g
-  //  gyro  ±2000 dps => 16.4 LSB/(°/s)
-  auto to_ms2 = [](int16_t raw)->float { return (raw / 16384.0f) * 9.80665f; };
-  auto to_dps = [](int16_t raw)->float { return (raw / 16.4f); };
+  // Convert raw -> SI (adjust scales if you change ranges)
+  auto to_ms2 = [](int16_t raw)->float { return (raw / 16384.0f) * 9.80665f; }; // ±2g
+  auto to_dps = [](int16_t raw)->float { return (raw / 16.4f); };               // ±2000 dps
 
   if (accel_x) accel_x->publish_state(to_ms2(data.acc.x));
   if (accel_y) accel_y->publish_state(to_ms2(data.acc.y));
