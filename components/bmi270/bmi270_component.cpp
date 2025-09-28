@@ -60,13 +60,6 @@ uint8_t BMI270Component::map_gyr_odr_(uint16_t hz) const {
   return BMI2_GYR_ODR_25HZ; // gyro has no 12.5, use 25 as floor
 }
 
-// ---------- Setup ----------
-#include "esphome/core/hal.h"
-#include "esphome/core/log.h"
-#include "bmi270_component.h"
-
-void BMI270Component::cb_delay_us(uint32_t us, void *) { delayMicroseconds(us); }
-
 void BMI270Component::setup() {
   ESP_LOGI(TAG, "Setting up BMI270...");
 
