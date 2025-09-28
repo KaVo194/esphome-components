@@ -6,7 +6,9 @@
 extern "C" {
   #include "bmi2.h"
   #include "bmi270.h"
-  #include "bmi270_config_file.h"
+// Forward decls (harmless if already present)
+  int8_t bmi270_init(struct bmi2_dev *dev);
+  int8_t bmi270_load_config_file(struct bmi2_dev *dev);
 }
 
 namespace esphome {

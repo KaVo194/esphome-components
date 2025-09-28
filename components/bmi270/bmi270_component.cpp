@@ -61,41 +61,31 @@ uint8_t BMI270Component::map_gyr_odr_(uint16_t hz) const {
 }
 
 // ---------- Setup ----------
+#include "esphome/core/hal.h"
+#include "esphome/core/log.h"
+#include "bmi270_component.h"
+
+void BMI270Component::cb_delay_us(uint32_t us, void *) { delayMicroseconds(us); }
+
 void BMI270Component::setup() {
   ESP_LOGI(TAG, "Setting up BMI270...");
 
-  // --- 1. Fill Bosch device struct ----------------
-  dev_.intf           = BMI2_I2C_INTF;   // we use I²C
-  dev_.intf_ptr       = this;            // pass this class for callbacks
+  dev_.intf           = BMI2_I2C_INTF;
+  dev_.intf_ptr       = this;
   dev_.read           = &BMI270Component::cb_read;
   dev_.write          = &BMI270Component::cb_write;
   dev_.delay_us       = &BMI270Component::cb_delay_us;
-  dev_.read_write_len = 64;              // max burst length
+  dev_.read_write_len = 64;
 
-  // --- 2. Initialize BMI270 -----------------------
-  int8_t rslt = bmi270_init(&dev_);      // <-- this function is from Bosch’s bmi270.c
-  if (rslt != BMI2_OK) {
-    ESP_LOGE(TAG, "bmi270_init failed: %d", rslt);
-    this->mark_failed();
-    return;
-  }
+  int8_t rslt = bmi270_init(&dev_);
+  if (rslt != BMI2_OK) { ESP_LOGE(TAG, "bmi270_init failed: %d", rslt); this->mark_failed(); return; }
 
-  // --- 3. Load the feature/config blob ------------
-  rslt = bmi270_load_config_file(&dev_); // <-- also from Bosch’s bmi270.c
-  if (rslt != BMI2_OK) {
-    ESP_LOGE(TAG, "load_config_file failed: %d", rslt);
-    this->mark_failed();
-    return;
-  }
+  rslt = bmi270_load_config_file(&dev_);   // ← use the one you confirmed exists
+  if (rslt != BMI2_OK) { ESP_LOGE(TAG, "load_config_file failed: %d", rslt); this->mark_failed(); return; }
 
-  // --- 4. Enable accel + gyro ---------------------
   uint8_t sens_list[2] = { BMI2_ACCEL, BMI2_GYRO };
   rslt = bmi2_sensor_enable(sens_list, 2, &dev_);
-  if (rslt != BMI2_OK) {
-    ESP_LOGE(TAG, "sensor_enable failed: %d", rslt);
-    this->mark_failed();
-    return;
-  }
+  if (rslt != BMI2_OK) { ESP_LOGE(TAG, "sensor_enable failed: %d", rslt); this->mark_failed(); return; }
 
   ESP_LOGI(TAG, "BMI270 setup complete!");
 }
