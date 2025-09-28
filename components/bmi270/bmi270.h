@@ -6,7 +6,7 @@
 extern "C" {
   #include "bmi2.h"
   #include "bmi270.h"
-  #include "bmi270_config_file.h"
+//  #include "bmi270_config_file.h"
 }
 
 namespace esphome {
