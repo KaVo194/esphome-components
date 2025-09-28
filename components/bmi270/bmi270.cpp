@@ -1,8 +1,9 @@
-#include "bmi270.h"
 #include "esphome/core/log.h"
+#include"esphome/core/hal.h"
+#include"esphome/core/log.h"
+#include "bmi270.h"
 #include <cstring>
 #include <cmath>
-#include "Arduino.h" 
 
 namespace esphome {
 namespace bmi270 {
