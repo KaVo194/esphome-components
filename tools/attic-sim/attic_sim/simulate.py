@@ -64,7 +64,7 @@ def run(cfg, weather, attic_measured=None):
     rec = {k: [] for k in (
         "t_h", "T_out", "Td_out", "T_att", "Td_att", "RH_att", "T_conc_top", "RH_conc_top",
         "RH_ins_bot", "cond_g", "pipe_on", "T_ceil_bottom", "Td_room", "phi_wood",
-        "q_pipe", "g_top")}  # g_top: kumuliert [kg/m2], Decke -> Dachraum
+        "q_pipe", "g_top", "u_ins_bot")}  # g_top: kumuliert [kg/m2], Decke -> Dachraum
     pipe_on = False
     guard_off_h = 0.0
     g_cum = 0.0
@@ -121,6 +121,7 @@ def run(cfg, weather, attic_measured=None):
             rec["phi_wood"].append(att.phi_wood() if attic_measured is None else np.nan)
             rec["q_pipe"].append(info["q_pipe"])
             rec["g_top"].append(g_cum)
+            rec["u_ins_bot"].append(100.0 * col.W[i_ins_bot] / col.mats[i_ins_bot].rho)
     res = {k: np.array(v) for k, v in rec.items()}
     res["time"] = weather["time"][0] + (res["t_h"] * 3600).astype("timedelta64[s]")
     res["guard_off_h"] = guard_off_h
@@ -151,6 +152,7 @@ def summarize(res, cfg, eval_from_day=0.0):
         "Stunden r.F. Betonoberseite >= 95 %": int((rh_c >= 0.95).sum()),
         "r.F. unterste Daemmlage max [%]": round(100 * float(rh_i.max()), 1),
         "Stunden r.F. unterste Daemmlage >= 80 %": int((rh_i >= 0.80).sum()),
+        "Wassergehalt unterste Daemmlage max [M-%]": round(float(res["u_ins_bot"][m].max()), 1),
         "Tauwasser max [g/m2]": round(float(cond.max()), 1),
         "Tauwasser am Ende [g/m2]": round(float(cond[-1]), 1),
         "Tauwasser max gesamte Decke [Liter]": round(float(cond.max()) * A / 1000.0, 2),

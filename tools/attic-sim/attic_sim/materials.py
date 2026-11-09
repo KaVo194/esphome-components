@@ -74,6 +74,10 @@ LIBRARY = {
     # Mineralwolle: praktisch nicht hygroskopisch
     "mineralwolle": Material("Mineralwolle", rho=30, c=840, lam=0.035, mu=1.0,
                              porosity=0.95, w80=0.05, wf=0.1),
+    # Zellulose-Einblas-/Schuettdaemmung, offen auf Decke (Dichte ~35-50 kg/m3).
+    # Ausgleichsfeuchte ca. 12-14 M-% bei 80 % r.F. -> GROBE ANNAHME, bitte Datenblatt pruefen.
+    "zellulose": Material("Zellulose", rho=45, c=2000, lam=0.040, mu=1.5,
+                          porosity=0.95, w80=5.9, wf=11.0),
     "eps": Material("EPS", rho=20, c=1500, lam=0.035, mu=60,
                     porosity=0.95, w80=0.01, wf=0.02),
     # Nadelholz ~16 M-% bei 80 % r.F., ~28 M-% Fasersaettigung

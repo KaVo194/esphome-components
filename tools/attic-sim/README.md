@@ -69,41 +69,40 @@ python -m unittest discover -s tests             # Plausibilitätstests
 Die Ergebnisse landen in `results/`: Zeitverläufe als PNG und CSV sowie
 `zusammenfassung.json`.
 
-## Erste Ergebnisse (alle Annahmen siehe config.toml)
+## Ergebnisse für den bestätigten Aufbau
 
-Für alle Fälle wurde ein künstliches Wetterszenario gerechnet: zuerst 30 Tage
-zum Einschwingen, dann eine schwüle Hitzeperiode (Tag 26 ± 6 °C, Außentaupunkt
-wie in der Tabelle), danach Abkühlung. Ausgewertet wurde ab Tag 30.
+Bestätigt: keine Folie auf dem Beton, 30 cm geschüttete Zellulose, keine
+Raumentfeuchtung, Grundfläche 100 m², Dachneigung ca. 10°. Alle übrigen Werte
+sind weiterhin Annahmen. Die Zahlen sind deshalb **Größenordnungen**.
 
-| Fall | Taupunkt außen | Betonoberseite | max. r.F. Betonoberseite | max. r.F. unterste Dämmlage | freies Tauwasser |
-|---|---|---|---|---|---|
-| Basis (Wasser 19,5 °C, Raumfeuchte folgt außen) | 19 °C, 14 Tage | ≈21,4 °C | 77 % | 81 % | 0 |
-| Basis, Hitzeperiode verschärft | 21 °C, 21 Tage | ≈21–22 °C | 81 % | 85 % | 0 |
-| Kalte Decke (Wasser 18,5 °C, guter Rohrübergang, Beton feucht) | 21 °C, 21 Tage | ≈19,6–21 °C | 88 % | 91 % | 0 |
-| wie oben, **Raum entfeuchtet** (50 % r.F., Wächter löst nie aus) | 21 °C, 21 Tage | ≈19,7 °C | 93 % | 98 % | 0 (Beton puffert) |
-| wie oben + **PE-Folie auf Beton** | 21 °C, 21 Tage | ≈19,7 °C | – | 100 % | **bis ≈86 g/m²** auf der Folie |
+Gerechnet wurde mit künstlichem Wetter: 30 Tage zum Einschwingen, dann eine
+schwüle Hitzeperiode (Tag 26 ± 6 °C) mit dem Außentaupunkt aus der Tabelle,
+danach Abkühlung. Ausgewertet wurde ab Tag 30.
+
+| Fall | Taupunkt außen | Kühlung läuft | max. r.F. Betonoberseite | max. r.F. unterste Zellulose | max. Holzfeuchte-Äquivalent Zellulose | freies Tauwasser |
+|---|---|---|---|---|---|---|
+| Basis (Wasser 19,5 °C, Beton 75 % Startfeuchte) | 19 °C, 14 Tage | 575 h | 74 % | 75 % | 11 M-% | 0 |
+| Hitzeperiode verschärft | 21 °C, 21 Tage | 514 h | 76 % | 78 % | 12 M-% | 0 |
+| + kalte Decke (Wasser 18,5 °C, guter Rohrübergang) | 21 °C, 21 Tage | 397 h | 78 % | 80 % | 13 M-% | 0 |
+| + Beton noch baufeucht (90 % Startfeuchte) | 21 °C, 21 Tage | 395 h | 83 % | 84 % | 15 M-% | 0 |
+| kalte Decke, Taupunktwächter schaltet **nie** ab | 21 °C, 21 Tage | 744 h | 80 % | 83 % | 14 M-% | 0 |
 
 Was sich daraus ablesen lässt, unter Vorbehalt der Annahmen:
 
-1. **Ohne Folie** nimmt der Beton die Feuchte auf, die aus dem Dachraum nach
-   unten wandert. Selbst wenn der Taupunkt im Dachraum zeitweise über der
-   Temperatur der Betonoberseite liegt, entsteht in den gerechneten Fällen
-   kein freies Wasser. Über längere Zeit wird es an der Grenzfläche aber
-   **> 80 % r.F.** feucht. Bei Staub oder organischen Resten kann das für
-   Schimmel relevant sein.
-2. **Mit dampfdichter Folie auf dem Beton** fällt dieser Puffer weg. Dann
-   bildet sich direkt auf der Folie Tauwasser. Im ungünstigsten Fall waren
-   es bis ≈86 g/m² (bei 100 m² ≈ 9 Liter). In der Abkühlphase trocknet es
-   wieder ab.
-3. Der **Taupunktwächter im Raum** schützt den Dachraum nur indirekt. Das
-   klappt, solange die Raumluft mindestens so feucht ist wie die Luft im
-   Dachraum. Wird der Raum entfeuchtet, löst der Wächter nicht mehr aus und
-   die Decke bleibt an schwülen Tagen kalt. Das ist der ungünstigste Fall.
+1. In keinem dieser Fälle entsteht **freies Tauwasser**. Der Beton und die
+   Zellulose selbst nehmen die Feuchte auf, die aus dem Dachraum nach unten
+   wandert. Beide puffern.
+2. In den ungünstigen Fällen liegt die **unterste Zelluloselage** über einige
+   hundert Stunden bei **über 80 % r.F.**. Zellulose ist organisch. Ob die
+   Schutzsalze im Produkt bei dieser Feuchte und Dauer Schimmel sicher
+   verhindern, kann das Modell nicht beurteilen. Bitte im Datenblatt bzw. beim
+   Hersteller nachfragen.
+3. Der **Taupunktwächter im Raum** schaltet die Kühlung an schwülen Tagen oft
+   ab, weil die Raumluft nicht entfeuchtet wird. Das schützt indirekt auch die
+   Deckenoberseite. Wie stark, hängt von seiner Schaltschwelle ab. Die ist
+   noch unbekannt, angenommen sind 1 K Abstand zur Deckenoberfläche.
 4. Am stärksten hängt das Ergebnis von der **Temperatur der Betonoberseite**
-   ab, also von Wassertemperatur, Rohrlage und Wärmeübergang. Danach folgt,
-   **ob eine Folie auf dem Beton liegt**. Der Luftwechsel im Dachraum spielt
-   nur eine kleine Rolle, weil die Feuchte vor allem durch Schalung und Bahn
-   ausgetauscht wird.
+   und davon ab, **wie feucht der Beton noch ist** (Neubau?).
 
 ## Empfohlene Messungen (z. B. mit ESPHome)
 

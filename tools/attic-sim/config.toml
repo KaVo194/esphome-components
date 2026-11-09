@@ -59,8 +59,8 @@ guard_margin_K = 1.0       # Taupunktwaechter: aus, wenn Td_Raum > T_Deckenunter
 # Schichten von UNTEN (Raum) nach OBEN (Dachraum)
 layers = [
   { name = "Beton", material = "beton", d = 0.20, dx_min = 0.002, dx_max = 0.01, refine = "both", pipe_height = 0.10 },   # Dicke ANNAHME (Zeichnung ~20 cm)
-  # { membrane = "PE-Folie", sd = 100.0 },   # Variante: Dampfsperre auf dem Beton
-  { name = "Daemmung", material = "mineralwolle", d = 0.30, dx_min = 0.002, dx_max = 0.03, refine = "bottom" },  # Material/Dicke ANNAHME
+  # keine Folie auf dem Beton (Angabe Eigentuemer)
+  { name = "Daemmung", material = "zellulose", d = 0.30, dx_min = 0.002, dx_max = 0.03, refine = "bottom" },  # 30 cm Zellulose geschuettet (Angabe Eigentuemer)
 ]
 h_room = 10.0              # Waermeuebergang Raum->Decke [W/m2K] (Rsi 0,10)
 beta_room = 2.0e-8         # Dampfuebergang [kg/(m2 s Pa)]
@@ -71,8 +71,8 @@ sd_top_surface = 0.0       # Abdeckung der Daemmung oben (0 = offen) ANNAHME
 phi0_concrete = 0.75       # Startfeuchte Beton (Neubau eher 0,85-0,95) ANNAHME
 
 [attic]
-floor_area = 100.0         # Grundflaeche Dachraum [m2] ANNAHME
-roof_pitch_deg = 10.0      # Dachneigung ANNAHME (Zeichnung ~10 Grad)
+floor_area = 100.0         # Grundflaeche Dachraum [m2] (bestaetigt)
+roof_pitch_deg = 10.0      # Dachneigung (bestaetigt)
 mean_height = 0.9          # mittlere lichte Hoehe Dachraum [m] ANNAHME
 wall_area = 40.0           # Kniestock + Giebel innen [m2] ANNAHME
 air_change_per_h = 0.1     # Luftwechsel Dachraum <-> aussen [1/h] ANNAHME (unbekannt!)
