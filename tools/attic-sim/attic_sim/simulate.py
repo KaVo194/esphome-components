@@ -15,6 +15,22 @@ def _rolling_mean(x, n):
     return out
 
 
+def _phase_index(times, ops):
+    """Index der aktiven Betriebsphase je Stunde. Phasen beginnen am Datum 'from' (MM-DD)
+    und gelten bis zur naechsten; die Reihenfolge der Liste ist die zeitliche Reihenfolge
+    ab der ersten Phase (Jahreswechsel erlaubt)."""
+    def doy(md):
+        return (np.datetime64(f"2001-{md}") - np.datetime64("2001-01-01")).astype(int)
+    starts = np.array([doy(o["from"]) for o in ops])
+    rel = (starts - starts[0]) % 365
+    if np.any(np.diff(rel) <= 0):
+        raise ValueError("Betriebsphasen muessen zeitlich aufsteigend ab der ersten Phase sein")
+    d = (times.astype("datetime64[D]") - times.astype("datetime64[Y]").astype("datetime64[D]")).astype(int)
+    d = np.minimum(d, 364)
+    r = (d - starts[0]) % 365
+    return np.searchsorted(rel, r, side="right") - 1
+
+
 def build_ceiling(cfg):
     c = cfg["ceiling"]
     return CeilingColumn(
@@ -40,6 +56,10 @@ def run(cfg, weather, attic_measured=None):
     T_out_h, p_out_h = weather["T"], weather["p"]
     T_up_h = _rolling_mean(T_out_h, 24) + cfg["attic"]["dT_upper"]
     month_h = (weather["time"].astype("datetime64[M]").astype(int) % 12) + 1
+    ops = cfg.get("operation")
+    if ops:
+        phase_h = _phase_index(weather["time"], ops)
+        T_out_72_h = _rolling_mean(T_out_h, 72)
 
     if attic_measured is not None:
         xs = attic_measured["time"].astype("int64")
@@ -65,7 +85,7 @@ def run(cfg, weather, attic_measured=None):
     rec = {k: [] for k in (
         "t_h", "T_out", "Td_out", "T_att", "Td_att", "RH_att", "T_conc_top", "RH_conc_top",
         "RH_ins_bot", "cond_g", "pipe_on", "T_ceil_bottom", "Td_room", "phi_wood",
-        "q_pipe", "g_top", "u_ins_bot", "RH_ins_top", "T_ins_top", "u_wood", "month")}  # g_top: kumuliert [kg/m2], Decke -> Dachraum
+        "q_pipe", "g_top", "u_ins_bot", "RH_ins_top", "T_ins_top", "u_wood", "month", "T_room")}  # g_top: kumuliert [kg/m2], Decke -> Dachraum
     pipe_on = False
     guard_off_h = 0.0
     g_cum = 0.0
@@ -75,7 +95,8 @@ def run(cfg, weather, attic_measured=None):
         p_out = float(np.interp(th, t_h, p_out_h))
         T_up = float(np.interp(th, t_h, T_up_h))
 
-        month = int(month_h[min(int(th), month_h.size - 1)])
+        ih = min(int(th), month_h.size - 1)
+        month = int(month_h[ih])
         cool_season = month in cool.get("months", range(1, 13))
         # Raumklima (ausserhalb der Kuehlsaison: Heizbetrieb, falls konfiguriert)
         T_room = room["T"] if cool_season else room.get("T_heating", room["T"])
@@ -96,6 +117,23 @@ def run(cfg, weather, attic_measured=None):
         pipe_on = bool(sched and not guard_trip)
         if sched and guard_trip:
             guard_off_h += dt / 3600.0
+        T_water = cool["T_water_mean"]
+
+        if ops:  # Betriebsphasen ueberschreiben Raumklima und Rohrbetrieb
+            ph = ops[phase_h[ih]]
+            if ph["room_T"] == "rohbau":
+                T_room = float(np.interp(th, t_h, T_out_72_h)) + ph.get("rohbau_offset_K", 0.0)
+            else:
+                T_room = float(ph["room_T"])
+            p_room = min(p_out + ph["dp_moisture_Pa"], 0.95 * float(psat(T_room)))
+            pipes = ph.get("pipes", "off")
+            T_water = ph.get("T_water_mean", T_water)
+            pipe_on = pipes in ("heat", "cool")
+            if pipes == "cool" and ph.get("guard", False):
+                trip = float(dewpoint(p_room)) > col.surface_temperature_bottom() - cool["guard_margin_K"]
+                if trip:
+                    guard_off_h += dt / 3600.0
+                    pipe_on = False
 
         # Dachraum
         if attic_measured is not None:
@@ -106,7 +144,7 @@ def run(cfg, weather, attic_measured=None):
                      col.G_top, col.K_top)
             Ta, pa = att.Ta, att.pa
 
-        info = col.step(dt, T_room, p_room, Ta, pa, pipe_on, cool["T_water_mean"])
+        info = col.step(dt, T_room, p_room, Ta, pa, pipe_on, T_water)
         g_cum += info["g_top"] * dt
 
         if k % steps_per_h == 0:
@@ -131,6 +169,7 @@ def run(cfg, weather, attic_measured=None):
             rec["T_ins_top"].append(float(col.T[-1]))
             rec["u_wood"].append(100.0 * att.Wr / att.wood.rho if attic_measured is None else np.nan)
             rec["month"].append(month)
+            rec["T_room"].append(T_room)
     res = {k: np.array(v) for k, v in rec.items()}
     res["time"] = weather["time"][0] + (res["t_h"] * 3600).astype("timedelta64[s]")
     res["guard_off_h"] = guard_off_h
@@ -151,7 +190,7 @@ def summarize(res, cfg, eval_from_day=0.0, months=None):
     td_gt = res["Td_att"][m] > res["T_conc_top"][m]
     return {
         "Auswertezeitraum [h]": int(m.sum()),
-        "Kuehlung aktiv [h]": int(res["pipe_on"][m].sum()),
+        "Rohre in Betrieb (Kuehlen oder Heizen) [h]": int(res["pipe_on"][m].sum()),
         "Kuehlung durch Taupunktwaechter aus [h, gesamt]": round(res["guard_off_h"], 1),
         "T Betonoberseite min / mittel [degC]": (round(float(res["T_conc_top"][m].min()), 1),
                                                   round(float(res["T_conc_top"][m].mean()), 1)),

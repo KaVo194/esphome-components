@@ -187,6 +187,51 @@ Was sich daraus ablesen lässt, unter Vorbehalt der Annahmen:
    Austrocknung nach oben **unterschätzt es das Risiko** deshalb eher. Die
    grobe Näherung mit µ = 30 zeigt, dass die Werte dann höher liegen.
 
+## Bauablauf im ersten Jahr (`config_bauablauf.toml`)
+
+| ab | Phase | Raum | Decke |
+|---|---|---|---|
+| 09.11. | Rohbau, unbeheizt | 72-h-Mittel außen + 2 K, Baufeuchte (außen + 300 Pa) | Rohre aus |
+| 01.02. | Heizung an, Bauaustrocknung | 20 °C, außen + 600 Pa | Heizen, Wasser im Mittel 28 °C |
+| 01.04. | Bewohnt, Heizbetrieb | 21 °C, außen + 400 Pa | Heizen, 26 °C |
+| 01.05. | Kühlbetrieb **ohne Taupunktwächter** | 25 °C, außen + 150 Pa | Kühlen, 19,5 °C, durchgehend |
+
+Die Zahlen für Raumfeuchte und Heizwasser sind **Annahmen**. Die Startfeuchte
+des Betons ist mit 97 % angesetzt. Gerechnet wurde mit fünf Wetterjahren
+(GeoSphere, Station 16413), jeweils vom 9.11. bis 30.9.
+
+```bash
+python run.py config_bauablauf.toml --weather data/geosphere_klima-v2-1d_16413_2021-2026.csv \
+  --format geosphere --station 16413 --start 2023-11-09 --end 2024-10-01 --seasons
+```
+
+Abkürzungen in der Tabelle: r.F. = relative Luftfeuchte, M-% = Wassergehalt
+in Masseprozent.
+
+| Fall | Winter: max. r.F. oberste Zellulose (Std. ≥ 80 %) | Winter: max. Holzfeuchte Schalungsoberfläche | Sommer: max. r.F. unterste Zellulose (Std. ≥ 80 %) | freies Tauwasser |
+|---|---|---|---|---|
+| Wetter 2021/22 | 85 % (1023) | 16 M-% | 69 % (0) | 0 |
+| Wetter 2022/23 | 91 % (1073) | 18 M-% | 76 % (0) | 0 |
+| Wetter 2023/24 | 85 % (1049) | 18 M-% | 77 % (0) | 0 |
+| Wetter 2024/25 | 93 % (1207) | 21 M-% | 69 % (0) | 0 |
+| Wetter 2025/26 | 93 % (1300) | 21 M-% | 71 % (0) | 0 |
+| 2023/24, nasser Beton + Kapillartransport genähert | 93 % (1347) | 22 M-% | 79 % (0) | 0 |
+| 2023/24, **kalte Decke** (Wasser 18,5 °C, guter Rohrübergang) | 86 % (1188) | 19 M-% | **82 % (336)** | 0 |
+
+Was sich daraus ablesen lässt, unter Vorbehalt der Annahmen:
+
+1. Solange der Rohbau **unbeheizt** ist, bleibt der Beton kalt. Dann wandert
+   weniger Feuchte nach oben als bei einer beheizten Decke. Ab Februar, wenn
+   die Decke heizt, steigt die Feuchte an der Oberseite der Zellulose und an
+   der Dachschalung deutlich. Die Werte über 80 % r.F. und die Holzfeuchte bis
+   ca. 21 M-% treten vor allem **Februar bis März** auf.
+2. **Sommer ohne Taupunktwächter:** Bei 19,5 °C mittlerer Wassertemperatur
+   entsteht weder Tauwasser noch eine Stunde über 80 % r.F. Ist die Decke
+   kälter (Wasser 18,5 °C, gute Wärmeübertragung), liegt die Unterseite der
+   Zellulose über 336 Stunden bei mehr als 80 % r.F. Freies Wasser entsteht
+   auch dann nicht. Entscheidend ist also die **tatsächliche Temperatur der
+   Betonoberseite**.
+
 ## Empfohlene Messungen (z. B. mit ESPHome)
 
 1. Einen Temperatur-/Feuchtesensor **auf die Betonoberseite unter die Dämmung**
