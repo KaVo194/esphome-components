@@ -82,6 +82,12 @@ LIBRARY = {
     # Ausgleichsfeuchte ca. 12-14 M-% bei 80 % r.F. -> GROBE ANNAHME, bitte Datenblatt pruefen.
     "zellulose": Material("Zellulose", rho=45, c=2000, lam=0.040, mu=1.5,
                           porosity=0.95, w80=5.9, wf=11.0),
+    # XPS (extrudiertes Polystyrol), mu ~80-250 je nach Produkt/Dicke -> Datenblatt pruefen.
+    "xps": Material("XPS", rho=35, c=1450, lam=0.035, mu=150,
+                    porosity=0.95, w80=0.01, wf=0.02),
+    # Variante: XPS mit nicht ganz dichten Stoessen/Fugen (effektiv kleineres mu, GROBE ANNAHME)
+    "xps_fugen": Material("XPS", rho=35, c=1450, lam=0.035, mu=30,
+                          porosity=0.95, w80=0.01, wf=0.02),
     "eps": Material("EPS", rho=20, c=1500, lam=0.035, mu=60,
                     porosity=0.95, w80=0.01, wf=0.02),
     # Nadelholz ~16 M-% bei 80 % r.F., ~28 M-% Fasersaettigung

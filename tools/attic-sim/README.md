@@ -232,6 +232,51 @@ Was sich daraus ablesen lässt, unter Vorbehalt der Annahmen:
    auch dann nicht. Entscheidend ist also die **tatsächliche Temperatur der
    Betonoberseite**.
 
+## Variante: 3 × 100 mm XPS statt Zellulose
+
+Die 300 mm XPS sind als eine Schicht mit µ = 150 gerechnet, möglichst
+diffusionsdicht verlegt. Das ist eine Annahme, der echte Wert hängt vom
+Produkt ab, bitte im Datenblatt prüfen. Für undichte Stöße gibt es die
+Variante `xps_fugen` mit µ = 30 (grobe Annahme). Der Bauablauf ist derselbe
+wie oben.
+
+```bash
+python run.py config_bauablauf.toml --weather data/geosphere_klima-v2-1d_16413_2021-2026.csv \
+  --format geosphere --station 16413 --start 2023-11-09 --end 2024-10-01 --seasons \
+  --set ceiling.layers.1.material=xps --set ceiling.layers.1.refine=both
+```
+
+Abkürzungen in der Tabelle: r.F. = relative Luftfeuchte, M-% = Wassergehalt
+in Masseprozent.
+
+| Fall | max. r.F. oberste Dämmlage (Std. ≥ 80 %) | max. Holzfeuchte Schalungsoberfläche | r.F. Betonoberseite | Wasser im Beton Start → Ende (kg/m²) | Tauwasser max. |
+|---|---|---|---|---|---|
+| **Zellulose**, Wetter 2023/24 (Vergleich) | 85 % (1049) | 18 M-% | meist < 80 % | 27,4 → 23,3 | 0 |
+| **XPS**, Wetter 2021/22 – 2025/26 | 73–78 % (0) | 13–15 M-% | ganzjährig ≈ 95–97 % | 27,4 → 24,9–25,2 | 2–6 g/m² (Feb.–März, im XPS) |
+| XPS mit undichten Fugen (µ = 30), 2023/24 | 74 % (0) | 13 M-% | ≈ 95–97 % | 27,4 → 24,8 | 1 g/m² |
+| XPS, kalte Decke im Sommer, 2023/24 | 74 % (0) | 13 M-% | ≈ 95–97 % | 27,4 → 25,4 | 0,1 g/m² |
+
+Was sich daraus ablesen lässt, unter Vorbehalt der Annahmen:
+
+1. **Dachraum:** Mit XPS gelangt praktisch keine Feuchte mehr aus dem Beton in
+   den Dachraum. Dachschalung und Oberseite der Dämmung bleiben trocken, auch
+   im Winter. Auch im Sommer kann kaum Dachraumluft an den kalten Beton
+   gelangen.
+2. **Beton:** Er kann nicht mehr nach oben austrocknen, sondern nur noch nach
+   unten in den Raum. Die Oberseite des Betons bleibt im ersten Jahr
+   ganzjährig bei ca. 95–97 % r.F. Nach elf Monaten hat er ca. 2,2–2,5 kg/m²
+   Wasser verloren, mit Zellulose waren es ca. 4,1 kg/m². Die Feuchte muss
+   also über die Deckenunterseite in die Räume. Ein diffusionsoffener
+   Anstrich bzw. Putz und gutes Lüften sind dann wichtiger.
+3. **Heizbetrieb Februar/März:** Die beheizte, nasse Decke drückt Dampf in das
+   XPS. Rechnerisch fallen dort 2–6 g/m² Tauwasser aus, im unteren bis
+   mittleren Bereich des XPS. Bei mehrlagiger Verlegung sammelt es sich in
+   der Praxis wahrscheinlich in den Lagenfugen. Die Menge ist klein und
+   trocknet bis April wieder ab.
+4. Die Oberseite des Betons bleibt dauerhaft feucht. Unproblematisch ist das
+   nur, solange dort keine organischen Reste liegen, z. B. Holz, Schalungsreste
+   oder Schmutz.
+
 ## Empfohlene Messungen (z. B. mit ESPHome)
 
 1. Einen Temperatur-/Feuchtesensor **auf die Betonoberseite unter die Dämmung**
