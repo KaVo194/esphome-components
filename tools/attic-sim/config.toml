@@ -1,0 +1,93 @@
+# Konfiguration Dachraum-/Deckensimulation
+# Werte mit "ANNAHME" sind geschaetzt bzw. aus der Detailzeichnung abgelesen und
+# sollten geprueft / ersetzt werden.
+
+[numerics]
+dt_s = 600                 # Zeitschritt [s]
+start_hour_of_day = 0      # Uhrzeit des ersten Datensatzes
+eval_from_day = 30         # Auswertung erst ab Tag X (Einschwingphase davor)
+
+[init]
+T0 = 18.0                  # Starttemperatur aller Bauteile [degC]
+phi0_other = 0.70          # Startfeuchte Daemmung/Holz/Dachraum
+
+# --- Wetter-Szenario (nur ohne --weather) -------------------------------
+# Einschwingen -> schwuele Hitzeperiode -> Abkuehlung
+[[scenario]]
+label = "Einschwingen, maessig warm"
+days = 30
+T_mean = 18.0
+T_amp = 5.0
+Td_mean = 11.0
+Td_amp = 1.0
+noise = 0.5
+
+[[scenario]]
+label = "Schwuele Hitzeperiode"
+days = 14
+T_mean = 26.0
+T_amp = 6.0
+Td_mean = 19.0
+Td_amp = 1.0
+noise = 0.5
+
+[[scenario]]
+label = "Abkuehlung"
+days = 10
+T_mean = 19.0
+T_amp = 5.0
+Td_mean = 12.0
+Td_amp = 1.0
+noise = 0.5
+
+[room]
+T = 25.0                   # Raumtemperatur im Kuehlbetrieb [degC] ANNAHME
+humidity_mode = "outdoor_plus"   # "outdoor_plus" oder "fixed"
+dp_moisture_Pa = 150.0     # Feuchteproduktion: Raum-Dampfdruck = aussen + X Pa  ANNAHME
+rh = 0.55                  # nur bei humidity_mode = "fixed"
+
+[cooling]
+enabled = true
+start_day = 20             # Kuehlung ab Tag ...
+hour_on = 0                # Betriebszeit (0..24 = durchgehend)
+hour_off = 24
+T_water_mean = 19.5        # mittlere Wassertemperatur: VL 18 degC, RL ~21 degC ANNAHME
+R_pipe = 0.07              # Waermeuebergangswiderstand Wasser->Rohrebene [m2K/W] ANNAHME
+guard_margin_K = 1.0       # Taupunktwaechter: aus, wenn Td_Raum > T_Deckenunterseite - X  ANNAHME
+
+[ceiling]
+# Schichten von UNTEN (Raum) nach OBEN (Dachraum)
+layers = [
+  { name = "Beton", material = "beton", d = 0.20, dx_min = 0.002, dx_max = 0.01, refine = "both", pipe_height = 0.10 },   # Dicke ANNAHME (Zeichnung ~20 cm)
+  # { membrane = "PE-Folie", sd = 100.0 },   # Variante: Dampfsperre auf dem Beton
+  { name = "Daemmung", material = "mineralwolle", d = 0.30, dx_min = 0.002, dx_max = 0.03, refine = "bottom" },  # Material/Dicke ANNAHME
+]
+h_room = 10.0              # Waermeuebergang Raum->Decke [W/m2K] (Rsi 0,10)
+beta_room = 2.0e-8         # Dampfuebergang [kg/(m2 s Pa)]
+sd_room_surface = 0.1      # Anstrich Deckenunterseite [m] ANNAHME
+h_top = 6.0                # Waermeuebergang Dachraum->Daemmung [W/m2K] (Rsi 0,17)
+beta_top = 2.0e-8
+sd_top_surface = 0.0       # Abdeckung der Daemmung oben (0 = offen) ANNAHME
+phi0_concrete = 0.75       # Startfeuchte Beton (Neubau eher 0,85-0,95) ANNAHME
+
+[attic]
+floor_area = 100.0         # Grundflaeche Dachraum [m2] ANNAHME
+roof_pitch_deg = 10.0      # Dachneigung ANNAHME (Zeichnung ~10 Grad)
+mean_height = 0.9          # mittlere lichte Hoehe Dachraum [m] ANNAHME
+wall_area = 40.0           # Kniestock + Giebel innen [m2] ANNAHME
+air_change_per_h = 0.1     # Luftwechsel Dachraum <-> aussen [1/h] ANNAHME (unbekannt!)
+sd_roof_to_cavity = 0.3    # Rest-Schalung + Omega Monotop bis Hinterlueftung [m] ANNAHME
+dT_upper = 2.0             # obere Schalung waermer als 24h-Mittel aussen [K] ANNAHME
+h_inside = 5.0
+h_cavity_conv = 5.0
+h_cavity_rad = 5.0
+beta_inside = 1.5e-8
+U_wall_outside = 0.21      # Kniestock: 25 cm STB + 16 cm EPS
+wood_material = "holz"
+wall_material = "beton"
+wood_area_factor = 1.7     # Holzoberflaeche (Schalung + Sparren) / Dachflaeche
+wood_volume_per_roof_m2 = 0.05   # Schalung 2,4 cm + Sparren 10/20
+board_thickness = 0.024
+wood_sorption_depth = 0.005      # wirksame Sorptionstiefe Holz [m] ANNAHME
+wall_sorption_depth = 0.005
+wall_thickness = 0.25
