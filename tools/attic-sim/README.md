@@ -71,38 +71,50 @@ Die Ergebnisse landen in `results/`: Zeitverläufe als PNG und CSV sowie
 
 ## Ergebnisse für den bestätigten Aufbau
 
-Bestätigt: keine Folie auf dem Beton, 30 cm geschüttete Zellulose, keine
-Raumentfeuchtung, Grundfläche 100 m², Dachneigung ca. 10°. Alle übrigen Werte
-sind weiterhin Annahmen. Die Zahlen sind deshalb **Größenordnungen**.
+Bestätigt sind:
 
-Gerechnet wurde mit künstlichem Wetter: 30 Tage zum Einschwingen, dann eine
-schwüle Hitzeperiode (Tag 26 ± 6 °C) mit dem Außentaupunkt aus der Tabelle,
-danach Abkühlung. Ausgewertet wurde ab Tag 30.
+- Neubau in 8051 Thal bei Graz
+- 20 cm Stahlbeton, Rohrlage 8 cm von unten
+- keine Folie auf dem Beton
+- 30 cm geschüttete Zellulose
+- keine Raumentfeuchtung
+- 100 m² Grundfläche, ca. 10° Dachneigung
 
-| Fall | Taupunkt außen | Kühlung läuft | max. r.F. Betonoberseite | max. r.F. unterste Zellulose | max. Holzfeuchte-Äquivalent Zellulose | freies Tauwasser |
-|---|---|---|---|---|---|---|
-| Basis (Wasser 19,5 °C, Beton 75 % Startfeuchte) | 19 °C, 14 Tage | 575 h | 74 % | 75 % | 11 M-% | 0 |
-| Hitzeperiode verschärft | 21 °C, 21 Tage | 514 h | 76 % | 78 % | 12 M-% | 0 |
-| + kalte Decke (Wasser 18,5 °C, guter Rohrübergang) | 21 °C, 21 Tage | 397 h | 78 % | 80 % | 13 M-% | 0 |
-| + Beton noch baufeucht (90 % Startfeuchte) | 21 °C, 21 Tage | 395 h | 83 % | 84 % | 15 M-% | 0 |
-| kalte Decke, Taupunktwächter schaltet **nie** ab | 21 °C, 21 Tage | 744 h | 80 % | 83 % | 14 M-% | 0 |
+Alles Übrige sind weiterhin Annahmen, die Zahlen daher **Größenordnungen**.
+
+Gerechnet wurde mit künstlichem Wetter, **nicht** mit Grazer Messdaten:
+30 Tage zum Einschwingen, dann eine schwüle Hitzeperiode (Tag 26 ± 6 °C),
+danach Abkühlung. Ausgewertet wurde ab Tag 30. Die Startfeuchte des Betons
+ist über den ganzen Querschnitt gleich angenommen, denn wann die Decke
+betoniert wurde, ist unbekannt.
+
+Abkürzungen in der Tabelle: Td = Außentaupunkt, r.F. = relative Luftfeuchte,
+M-% = Wassergehalt in Masseprozent.
+
+| Fall | Kühlung an | max. r.F. Betonoberseite | max. r.F. unterste Zellulose (Stunden ≥ 80 %) | max. Wassergehalt Zellulose | freies Tauwasser |
+|---|---|---|---|---|---|
+| Basis: Td 19 °C 14 Tage, Beton 90 % | 575 h | 79 % | 80 % (0 h) | 13 M-% | 0 |
+| Td 21 °C 21 Tage | 507 h | 81 % | 82 % (153 h) | 14 M-% | 0 |
+| + kältere Decke (Wasser 18,5 °C, guter Rohrübergang) | 387 h | 83 % | 84 % (299 h) | 15 M-% | 0 |
+| + Beton sehr nass (97 %) | 389 h | 86 % | 87 % (561 h) | 16 M-% | 0 |
+| kältere Decke, Taupunktwächter schaltet **nie** ab | 744 h | 85 % | 87 % (511 h) | 16 M-% | 0 |
+| Vergleich: Beton bereits trocken (75 %), Td 21 °C | 508 h | 76 % | 77 % (0 h) | 12 M-% | 0 |
 
 Was sich daraus ablesen lässt, unter Vorbehalt der Annahmen:
 
-1. In keinem dieser Fälle entsteht **freies Tauwasser**. Der Beton und die
-   Zellulose selbst nehmen die Feuchte auf, die aus dem Dachraum nach unten
-   wandert. Beide puffern.
-2. In den ungünstigen Fällen liegt die **unterste Zelluloselage** über einige
-   hundert Stunden bei **über 80 % r.F.**. Zellulose ist organisch. Ob die
-   Schutzsalze im Produkt bei dieser Feuchte und Dauer Schimmel sicher
-   verhindern, kann das Modell nicht beurteilen. Bitte im Datenblatt bzw. beim
+1. **Kein freies Tauwasser** in allen Fällen. Beton und Zellulose nehmen die
+   Feuchte auf und puffern sie.
+2. Bei diesem Neubau trägt die **Baufeuchte des Betons** offenbar ähnlich viel
+   oder mehr zur Feuchte an der Unterseite der Zellulose bei als die schwüle
+   Dachraumluft. Vergleiche dazu die letzte Zeile: Mit bereits trockenem Beton
+   gibt es keine Stunden über 80 %. Die Kühlung macht den Beton kälter und
+   verschärft das zusätzlich.
+3. Über 80 % r.F. über einige hundert Stunden ist für die organische Zellulose
+   ein Hinweis auf mögliches Schimmelrisiko. Ob tatsächlich etwas wächst,
+   berechnet das Modell nicht. Das hängt auch vom Produkt ab, bitte beim
    Hersteller nachfragen.
-3. Der **Taupunktwächter im Raum** schaltet die Kühlung an schwülen Tagen oft
-   ab, weil die Raumluft nicht entfeuchtet wird. Das schützt indirekt auch die
-   Deckenoberseite. Wie stark, hängt von seiner Schaltschwelle ab. Die ist
-   noch unbekannt, angenommen sind 1 K Abstand zur Deckenoberfläche.
-4. Am stärksten hängt das Ergebnis von der **Temperatur der Betonoberseite**
-   und davon ab, **wie feucht der Beton noch ist** (Neubau?).
+4. Die Simulation deckt nur ca. zwei Monate ab. Wie schnell der Beton über
+   mehrere Jahre austrocknet, ist damit nicht abgebildet.
 
 ## Empfohlene Messungen (z. B. mit ESPHome)
 

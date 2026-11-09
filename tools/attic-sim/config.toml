@@ -58,7 +58,7 @@ guard_margin_K = 1.0       # Taupunktwaechter: aus, wenn Td_Raum > T_Deckenunter
 [ceiling]
 # Schichten von UNTEN (Raum) nach OBEN (Dachraum)
 layers = [
-  { name = "Beton", material = "beton", d = 0.20, dx_min = 0.002, dx_max = 0.01, refine = "both", pipe_height = 0.10 },   # Dicke ANNAHME (Zeichnung ~20 cm)
+  { name = "Beton", material = "beton", d = 0.20, dx_min = 0.002, dx_max = 0.01, refine = "both", pipe_height = 0.08 },   # 20 cm, Rohrlage 8 cm von unten (bestaetigt)
   # keine Folie auf dem Beton (Angabe Eigentuemer)
   { name = "Daemmung", material = "zellulose", d = 0.30, dx_min = 0.002, dx_max = 0.03, refine = "bottom" },  # 30 cm Zellulose geschuettet (Angabe Eigentuemer)
 ]
@@ -68,7 +68,7 @@ sd_room_surface = 0.1      # Anstrich Deckenunterseite [m] ANNAHME
 h_top = 6.0                # Waermeuebergang Dachraum->Daemmung [W/m2K] (Rsi 0,17)
 beta_top = 2.0e-8
 sd_top_surface = 0.0       # Abdeckung der Daemmung oben (0 = offen) ANNAHME
-phi0_concrete = 0.75       # Startfeuchte Beton (Neubau eher 0,85-0,95) ANNAHME
+phi0_concrete = 0.90       # Startfeuchte Beton: Neubau -> baufeucht ANNAHME (Alter unbekannt)
 
 [attic]
 floor_area = 100.0         # Grundflaeche Dachraum [m2] (bestaetigt)
