@@ -110,3 +110,62 @@ def select(weather, start=None, end=None):
 
 def dewpoint_of(weather):
     return dewpoint(weather["p"])
+
+
+def _cos_interp(xq, xp, fp):
+    """Interpolation mit Kosinus-Uebergang zwischen Stuetzstellen (glatter Tagesgang)."""
+    i = np.clip(np.searchsorted(xp, xq) - 1, 0, len(xp) - 2)
+    f = (xq - xp[i]) / (xp[i + 1] - xp[i])
+    w = 0.5 - 0.5 * np.cos(np.pi * np.clip(f, 0.0, 1.0))
+    return fp[i] + (fp[i + 1] - fp[i]) * w
+
+
+def load_geosphere_daily(path, station=None):
+    """GeoSphere Austria 'Stationsdaten ... in taeglicher Aufloesung' (klima-v2-1d), CSV.
+
+    Benutzt tlmin/tlmax (Tagesextreme) und dampf_i/ii/iii (Dampfdruck hPa zu den
+    Klimaterminen). Daraus wird ein STUENDLICHER Verlauf konstruiert:
+      * Temperatur: Minimum ca. 6 Uhr, Maximum ca. 15 Uhr, Kosinus-Uebergang
+      * Dampfdruck: lineare Interpolation zwischen den Terminen
+    ANNAHME: Termine I/II/III = 7/14/19 Uhr Ortszeit (bitte in der
+    GeoSphere-Metadatenbeschreibung pruefen). Sommerzeit wird ignoriert.
+    Der echte Tagesgang ist damit nur genaehert.
+    """
+    rows = []
+    with open(path, newline="", encoding="utf-8") as f:
+        for r in csv.DictReader(f):
+            if station is not None and r["station"].strip() != str(station):
+                continue
+            try:
+                vals = [float(r[k]) for k in ("tlmin", "tlmax", "dampf_i", "dampf_ii", "dampf_iii")]
+            except (ValueError, KeyError):
+                continue
+            day = np.datetime64(r["time"][:10], "D")
+            rows.append((day, *vals))
+    if not rows:
+        raise ValueError(f"Keine vollstaendigen Tageswerte in {path} (Station {station})")
+    rows.sort(key=lambda x: x[0])
+    days = np.array([r[0] for r in rows])
+    if np.unique(days).size != days.size:
+        raise ValueError("Mehrere Stationen in der Datei -> --station angeben")
+    d0 = days[0]
+    dh = (days - d0).astype(float) * 24.0
+    tmin = np.array([r[1] for r in rows])
+    tmax = np.array([r[2] for r in rows])
+    e = np.array([r[3:6] for r in rows]) * 100.0  # hPa -> Pa
+
+    xT = np.concatenate([dh + 6.0, dh + 15.0])
+    fT = np.concatenate([tmin, tmax])
+    o = np.argsort(xT)
+    xT, fT = xT[o], fT[o]
+    xe = np.concatenate([dh + 7.0, dh + 14.0, dh + 19.0])
+    fe = np.concatenate([e[:, 0], e[:, 1], e[:, 2]])
+    o = np.argsort(xe)
+    xe, fe = xe[o], fe[o]
+
+    hours = np.arange(0.0, dh[-1] + 24.0)
+    T = _cos_interp(hours, xT, fT)
+    p = np.interp(hours, xe, fe)
+    p = np.minimum(p, 0.98 * psat(T))
+    time = d0.astype("datetime64[s]") + (hours * 3600).astype("timedelta64[s]")
+    return {"time": time, "T": T, "p": p}

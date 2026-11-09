@@ -96,12 +96,15 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("config", nargs="?", default=os.path.join(here, "config.toml"))
     ap.add_argument("--weather", help="Aussenklima-CSV")
-    ap.add_argument("--format", choices=["csv", "dwd"], default="csv")
+    ap.add_argument("--format", choices=["csv", "dwd", "geosphere"], default="csv")
     ap.add_argument("--attic-csv", help="gemessenes Dachraumklima (time,temp_c,rh)")
+    ap.add_argument("--station", help="Stationsnummer (GeoSphere-Datei mit mehreren Stationen)")
     ap.add_argument("--start")
     ap.add_argument("--end")
     ap.add_argument("--set", action="append", default=[], metavar="KEY=VAL")
     ap.add_argument("--compare", metavar="KEY=V1,V2,...")
+    ap.add_argument("--seasons", action="store_true",
+                    help="zusaetzlich getrennte Auswertung Winter (Nov-Maerz) und Sommer (Juni-Sept)")
     ap.add_argument("--out", default=os.path.join(here, "results"))
     args = ap.parse_args()
 
@@ -112,7 +115,12 @@ def main():
         set_path(cfg, k, v)
 
     if args.weather:
-        w = wx.load_dwd_hourly(args.weather) if args.format == "dwd" else wx.load_csv(args.weather)
+        if args.format == "dwd":
+            w = wx.load_dwd_hourly(args.weather)
+        elif args.format == "geosphere":
+            w = wx.load_geosphere_daily(args.weather, args.station)
+        else:
+            w = wx.load_csv(args.weather)
         w = wx.select(w, args.start, args.end)
         cfg["numerics"]["start_hour_of_day"] = int(str(w["time"][0])[11:13])
     else:
@@ -135,6 +143,10 @@ def main():
             w = wx.synthetic(c["scenario"])
         res = run(c, w, attic)
         summ = summarize(res, c, c["numerics"]["eval_from_day"])
+        if args.seasons:
+            summ = {"Gesamt": summ,
+                    "Winter (Nov-Maerz)": summarize(res, c, 0, months=(11, 12, 1, 2, 3)),
+                    "Sommer (Juni-Sept)": summarize(res, c, 0, months=(6, 7, 8, 9))}
         all_sum[name] = summ
         tag = name.replace("=", "_").replace(".", "-")
         plot(res, c, os.path.join(args.out, f"verlauf_{tag}.png"), name)
@@ -146,8 +158,12 @@ def main():
                    header="t_h,T_out,Td_out,T_att,Td_att,T_conc_top,RH_conc_top,RH_ins_bot,cond_g_m2,pipe_on",
                    comments="")
         print(f"\n=== {name} ===")
-        for k, v in summ.items():
-            print(f"  {k}: {v}")
+        groups = summ if args.seasons else {"": summ}
+        for gname, g in groups.items():
+            if gname:
+                print(f"  --- {gname} ---")
+            for k, v in g.items():
+                print(f"  {k}: {v}")
     with open(os.path.join(args.out, "zusammenfassung.json"), "w", encoding="utf-8") as f:
         json.dump(all_sum, f, ensure_ascii=False, indent=2, default=str)
     print(f"\nErgebnisse in {args.out}")

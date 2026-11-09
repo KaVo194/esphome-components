@@ -39,6 +39,7 @@ def run(cfg, weather, attic_measured=None):
     t_h = (weather["time"] - weather["time"][0]).astype("timedelta64[s]").astype(float) / 3600.0
     T_out_h, p_out_h = weather["T"], weather["p"]
     T_up_h = _rolling_mean(T_out_h, 24) + cfg["attic"]["dT_upper"]
+    month_h = (weather["time"].astype("datetime64[M]").astype(int) % 12) + 1
 
     if attic_measured is not None:
         xs = attic_measured["time"].astype("int64")
@@ -64,7 +65,7 @@ def run(cfg, weather, attic_measured=None):
     rec = {k: [] for k in (
         "t_h", "T_out", "Td_out", "T_att", "Td_att", "RH_att", "T_conc_top", "RH_conc_top",
         "RH_ins_bot", "cond_g", "pipe_on", "T_ceil_bottom", "Td_room", "phi_wood",
-        "q_pipe", "g_top", "u_ins_bot")}  # g_top: kumuliert [kg/m2], Decke -> Dachraum
+        "q_pipe", "g_top", "u_ins_bot", "RH_ins_top", "T_ins_top", "u_wood", "month")}  # g_top: kumuliert [kg/m2], Decke -> Dachraum
     pipe_on = False
     guard_off_h = 0.0
     g_cum = 0.0
@@ -74,17 +75,21 @@ def run(cfg, weather, attic_measured=None):
         p_out = float(np.interp(th, t_h, p_out_h))
         T_up = float(np.interp(th, t_h, T_up_h))
 
-        # Raumklima
-        T_room = room["T"]
+        month = int(month_h[min(int(th), month_h.size - 1)])
+        cool_season = month in cool.get("months", range(1, 13))
+        # Raumklima (ausserhalb der Kuehlsaison: Heizbetrieb, falls konfiguriert)
+        T_room = room["T"] if cool_season else room.get("T_heating", room["T"])
+        dp_moist = room["dp_moisture_Pa"] if cool_season else room.get(
+            "dp_moisture_Pa_heating", room["dp_moisture_Pa"])
         if room["humidity_mode"] == "outdoor_plus":
-            p_room = min(p_out + room["dp_moisture_Pa"], 0.95 * float(psat(T_room)))
+            p_room = min(p_out + dp_moist, 0.95 * float(psat(T_room)))
         else:
             p_room = float(p_from_rh(T_room, room["rh"]))
 
         # Kuehlung: Zeitplan + Taupunktwaechter im Raum (unter der Decke)
         hour = (th + cfg["numerics"]["start_hour_of_day"]) % 24
         day = th / 24.0
-        sched = cool["enabled"] and cool["start_day"] <= day < cool.get("end_day", 1e9) and (
+        sched = cool["enabled"] and cool_season and cool["start_day"] <= day < cool.get("end_day", 1e9) and (
             cool["hour_on"] <= hour < cool["hour_off"] if cool["hour_on"] < cool["hour_off"]
             else (hour >= cool["hour_on"] or hour < cool["hour_off"]))
         guard_trip = float(dewpoint(p_room)) > col.surface_temperature_bottom() - cool["guard_margin_K"]
@@ -122,6 +127,10 @@ def run(cfg, weather, attic_measured=None):
             rec["q_pipe"].append(info["q_pipe"])
             rec["g_top"].append(g_cum)
             rec["u_ins_bot"].append(100.0 * col.W[i_ins_bot] / col.mats[i_ins_bot].rho)
+            rec["RH_ins_top"].append(float(col.phi[-1]))
+            rec["T_ins_top"].append(float(col.T[-1]))
+            rec["u_wood"].append(100.0 * att.Wr / att.wood.rho if attic_measured is None else np.nan)
+            rec["month"].append(month)
     res = {k: np.array(v) for k, v in rec.items()}
     res["time"] = weather["time"][0] + (res["t_h"] * 3600).astype("timedelta64[s]")
     res["guard_off_h"] = guard_off_h
@@ -131,8 +140,10 @@ def run(cfg, weather, attic_measured=None):
     return res
 
 
-def summarize(res, cfg, eval_from_day=0.0):
+def summarize(res, cfg, eval_from_day=0.0, months=None):
     m = res["t_h"] >= eval_from_day * 24
+    if months is not None:
+        m &= np.isin(res["month"], list(months))
     A = cfg["attic"]["floor_area"]
     rh_c = res["RH_conc_top"][m]
     rh_i = res["RH_ins_bot"][m]
@@ -153,6 +164,10 @@ def summarize(res, cfg, eval_from_day=0.0):
         "r.F. unterste Daemmlage max [%]": round(100 * float(rh_i.max()), 1),
         "Stunden r.F. unterste Daemmlage >= 80 %": int((rh_i >= 0.80).sum()),
         "Wassergehalt unterste Daemmlage max [M-%]": round(float(res["u_ins_bot"][m].max()), 1),
+        "r.F. oberste Daemmlage max [%]": round(100 * float(res["RH_ins_top"][m].max()), 1),
+        "Stunden r.F. oberste Daemmlage >= 80 %": int((res["RH_ins_top"][m] >= 0.80).sum()),
+        "Holzfeuchte Dachschalung (Sorptionsschicht) max [M-%]": (
+            round(float(np.nanmax(res["u_wood"][m])), 1) if np.isfinite(res["u_wood"][m]).any() else None),
         "Tauwasser max [g/m2]": round(float(cond.max()), 1),
         "Tauwasser am Ende [g/m2]": round(float(cond[-1]), 1),
         "Tauwasser max gesamte Decke [Liter]": round(float(cond.max()) * A / 1000.0, 2),

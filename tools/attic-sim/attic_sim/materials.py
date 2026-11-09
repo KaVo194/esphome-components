@@ -71,6 +71,10 @@ LIBRARY = {
     # Stahlbeton, Tabellenwerte Groessenordnung DIN EN ISO 10456 (mu trocken 130 / feucht 80)
     "beton": Material("Stahlbeton", rho=2300, c=1000, lam=2.3, mu=130,
                       porosity=0.15, w80=85.0, wf=150.0),
+    # Variante: junger, nasser Beton. Kleinere Diffusionswiderstandszahl als grober Ersatz
+    # fuer den im Modell fehlenden Kapillartransport (Sensitivitaet, kein Messwert).
+    "beton_nass": Material("Stahlbeton", rho=2300, c=1000, lam=2.3, mu=30,
+                           porosity=0.15, w80=85.0, wf=150.0),
     # Mineralwolle: praktisch nicht hygroskopisch
     "mineralwolle": Material("Mineralwolle", rho=30, c=840, lam=0.035, mu=1.0,
                              porosity=0.95, w80=0.05, wf=0.1),

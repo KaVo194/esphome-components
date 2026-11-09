@@ -45,10 +45,13 @@ T = 25.0                   # Raumtemperatur im Kuehlbetrieb [degC] ANNAHME
 humidity_mode = "outdoor_plus"   # "outdoor_plus" oder "fixed"
 dp_moisture_Pa = 150.0     # Feuchteproduktion: Raum-Dampfdruck = aussen + X Pa  ANNAHME
 rh = 0.55                  # nur bei humidity_mode = "fixed"
+T_heating = 21.0           # Raumtemperatur ausserhalb der Kuehlsaison ANNAHME
+dp_moisture_Pa_heating = 400.0   # Winter: Raum-Dampfdruck = aussen + X Pa (~40-50 % r.F.) ANNAHME
 
 [cooling]
 enabled = true
-start_day = 20             # Kuehlung ab Tag ...
+months = [5, 6, 7, 8, 9]   # Kuehlsaison (sonst Heizbetrieb, Rohre aus) ANNAHME
+start_day = 20             # Kuehlung fruehestens ab Tag ...
 hour_on = 0                # Betriebszeit (0..24 = durchgehend)
 hour_off = 24
 T_water_mean = 19.5        # mittlere Wassertemperatur: VL 18 degC, RL ~21 degC ANNAHME
