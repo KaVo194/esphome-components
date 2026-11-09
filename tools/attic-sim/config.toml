@@ -68,7 +68,7 @@ sd_room_surface = 0.1      # Anstrich Deckenunterseite [m] ANNAHME
 h_top = 6.0                # Waermeuebergang Dachraum->Daemmung [W/m2K] (Rsi 0,17)
 beta_top = 2.0e-8
 sd_top_surface = 0.0       # Abdeckung der Daemmung oben (0 = offen) ANNAHME
-phi0_concrete = 0.90       # Startfeuchte Beton: Neubau -> baufeucht ANNAHME (Alter unbekannt)
+phi0_concrete = 0.95       # Startfeuchte Beton: betoniert ca. Okt. 2026, erster Sommer -> noch baufeucht ANNAHME
 
 [attic]
 floor_area = 100.0         # Grundflaeche Dachraum [m2] (bestaetigt)
