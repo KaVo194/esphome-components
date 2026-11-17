@@ -38,6 +38,11 @@ def set_path(cfg, dotted, value):
         if float(value) > 0:
             lay.insert(1, {"membrane": "Folie", "sd": float(value)})
         return
+    if dotted == "ceiling.insulation" and value.lower() in ("none", "keine", "0"):
+        # Kurzform: alle Schichten oberhalb des Betons entfernen (Decke ungedaemmt)
+        lay = cfg["ceiling"]["layers"]
+        lay[:] = lay[:1]
+        return
     if isinstance(old, bool):
         value = value.lower() in ("1", "true", "yes", "ja")
     elif isinstance(old, (int, float)):

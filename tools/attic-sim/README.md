@@ -277,6 +277,55 @@ Was sich daraus ablesen lässt, unter Vorbehalt der Annahmen:
    nur, solange dort keine organischen Reste liegen, z. B. Holz, Schalungsreste
    oder Schmutz.
 
+## Variante: Decke ganz ohne Dämmung
+
+Alle Schichten über dem Beton entfallen (`--set ceiling.insulation=none`). Der
+Bauablauf ist derselbe wie oben. In der Tabelle sind „Betonoberseite“ und
+„unterste/oberste Dämmlage“ deshalb dieselbe Stelle.
+
+```bash
+python run.py config_bauablauf.toml --weather data/geosphere_klima-v2-1d_16413_2021-2026.csv \
+  --format geosphere --station 16413 --start 2023-11-09 --end 2024-10-01 --seasons \
+  --set ceiling.insulation=none
+```
+
+Abkürzungen in der Tabelle: r.F. = relative Luftfeuchte, M-% = Wassergehalt
+in Masseprozent.
+
+| Fall | Winter: max. Holzfeuchte Schalungsoberfläche | Winter: Std. r.F. Betonoberseite ≥ 80 % | Sommer: max. r.F. Betonoberseite (Std. ≥ 80 %) | Wasser im Beton Start → Ende (kg/m²) | Tauwasser |
+|---|---|---|---|---|---|
+| Ohne Dämmung, Wetter 2021/22 – 2025/26 | 15–17 M-% | 221–573 | 68–78 % (0) | 27,4 → 22,8–23,3 | 0 |
+| Ohne Dämmung, kalte Decke im Sommer (2023/24) | 15 M-% | 221 | 84 % (469) | 27,4 → 23,5 | 0 |
+| Ohne Dämmung, nasser Beton + Kapillartransport genähert | 17 M-% | 1051 | 78 % (0) | 27,4 → 19,3 | 0 |
+| Zum Vergleich: Zellulose (2023/24) | 18 M-% | – | 77 % (0) | 27,4 → 23,3 | 0 |
+
+Energie und Dachraumtemperatur, Wetter 2023/24:
+
+| | ohne Dämmung | 30 cm Zellulose |
+|---|---|---|
+| Dachraum Winter min / mittel / max | −2 / 10 / 21 °C | −3 / 6 / 17 °C |
+| Dachraum Sommer min / mittel / max | 16 / 22 / 26 °C | 11 / 23 / 29 °C |
+| Wärmestrom Decke → Dachraum, Mittel Nov–März | 12,8 W/m² | 0,9 W/m² |
+| Heizleistung der Rohre (Mittel über die Heizstunden) | 59 W/m² | 42 W/m² |
+| Kühlleistung der Rohre (Mittel über die Kühlstunden) | 28 W/m² | 27 W/m² |
+
+Was sich daraus ablesen lässt, unter Vorbehalt der Annahmen:
+
+1. **Feuchte:** Ohne Dämmung entsteht kein Tauwasser. Im Winter wärmt die
+   beheizte Decke den Dachraum mit. Dachschalung und Dachraumluft bleiben
+   dadurch eher trockener als mit Zellulose. Der Beton trocknet ähnlich
+   schnell wie mit Zellulose.
+2. **Sommer:** Die Betonoberseite liegt direkt an der Dachraumluft. Bei
+   19,5 °C Wassertemperatur gibt es keine Stunde über 80 % r.F. Bei kalter
+   Decke sind es ca. 470 Stunden mit bis zu 84 %. Freies Wasser entsteht auch
+   dann nicht, weil der Beton puffert.
+3. **Energie:** Im Winter heizt die Decke den Dachraum mit. Über November bis
+   März fließen im Mittel ca. 13 W/m² nach oben, bei 100 m² also ca. 1,3 kW.
+   Mit Zellulose sind es ca. 0,1 kW. Das ist eine grobe Größenordnung aus dem
+   vereinfachten Dachraummodell. Ob die Heizlast und die Bauvorschriften das
+   zulassen (Wärmeschutz der obersten Geschossdecke), muss eine Fachplanung
+   prüfen.
+
 ## Empfohlene Messungen (z. B. mit ESPHome)
 
 1. Einen Temperatur-/Feuchtesensor **auf die Betonoberseite unter die Dämmung**

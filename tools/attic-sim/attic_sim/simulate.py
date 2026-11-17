@@ -85,7 +85,7 @@ def run(cfg, weather, attic_measured=None):
     rec = {k: [] for k in (
         "t_h", "T_out", "Td_out", "T_att", "Td_att", "RH_att", "T_conc_top", "RH_conc_top",
         "RH_ins_bot", "cond_g", "pipe_on", "T_ceil_bottom", "Td_room", "phi_wood",
-        "q_pipe", "g_top", "u_ins_bot", "RH_ins_top", "T_ins_top", "u_wood", "month", "T_room", "W_conc")}  # g_top: kumuliert [kg/m2], Decke -> Dachraum
+        "q_pipe", "g_top", "u_ins_bot", "RH_ins_top", "T_ins_top", "u_wood", "month", "T_room", "W_conc", "q_top")}  # g_top: kumuliert [kg/m2], Decke -> Dachraum
     pipe_on = False
     guard_off_h = 0.0
     g_cum = 0.0
@@ -171,6 +171,7 @@ def run(cfg, weather, attic_measured=None):
             rec["month"].append(month)
             rec["T_room"].append(T_room)
             rec["W_conc"].append(col.moisture_in(conc_name))
+            rec["q_top"].append(info["q_top"])
     res = {k: np.array(v) for k, v in rec.items()}
     res["time"] = weather["time"][0] + (res["t_h"] * 3600).astype("timedelta64[s]")
     res["guard_off_h"] = guard_off_h
@@ -210,6 +211,13 @@ def summarize(res, cfg, eval_from_day=0.0, months=None):
             round(float(np.nanmax(res["u_wood"][m])), 1) if np.isfinite(res["u_wood"][m]).any() else None),
         "Wasser im Beton Anfang / Ende [kg/m2]": (round(float(res["W_conc"][m][0]), 2),
                                                    round(float(res["W_conc"][m][-1]), 2)),
+        "Dachraum T min / mittel / max [degC]": (round(float(res["T_att"][m].min()), 1),
+                                                  round(float(res["T_att"][m].mean()), 1),
+                                                  round(float(res["T_att"][m].max()), 1)),
+        "Waermestrom Decke -> Dachraum mittel [W/m2]": round(float(res["q_top"][m].mean()), 1),
+        "Rohrleistung mittel, nur Betriebsstunden [W/m2] (+ = Kuehlen, - = Heizen)": (
+            round(float(res["q_pipe"][m][res["pipe_on"][m].astype(bool)].mean()), 1)
+            if res["pipe_on"][m].any() else 0.0),
         "Tauwasser max [g/m2]": round(float(cond.max()), 1),
         "Tauwasser am Ende [g/m2]": round(float(cond[-1]), 1),
         "Tauwasser max gesamte Decke [Liter]": round(float(cond.max()) * A / 1000.0, 2),
