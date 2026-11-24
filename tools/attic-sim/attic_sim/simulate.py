@@ -49,8 +49,10 @@ def _set_initial_phi(col, cfg):
     col.reset_moisture()
 
 
-def run(cfg, weather, attic_measured=None):
-    """Simulation. attic_measured: optional dict(time,T,p) -> ersetzt Dachraummodell."""
+def run(cfg, weather, attic_measured=None, init_concrete=None):
+    """Simulation. attic_measured: optional dict(time,T,p) -> ersetzt Dachraummodell.
+    init_concrete: optional (W, T) Arrays fuer die Betonzellen (z.B. Endzustand eines
+    vorherigen Laufs mit gleichem Betonraster), um einen Aufbauwechsel zu simulieren."""
     dt = float(cfg["numerics"]["dt_s"])
     t_h = (weather["time"] - weather["time"][0]).astype("timedelta64[s]").astype(float) / 3600.0
     T_out_h, p_out_h = weather["T"], weather["p"]
@@ -69,6 +71,16 @@ def run(cfg, weather, attic_measured=None):
 
     col = build_ceiling(cfg)
     _set_initial_phi(col, cfg)
+    if init_concrete is not None:
+        cn = next(n for n, b in col.layer_bounds.items() if col.mats[b[0]].name == "Stahlbeton")
+        i0, i1 = col.layer_bounds[cn][:2]
+        W_c, T_c = init_concrete
+        if len(W_c) != i1 - i0:
+            raise ValueError("Betonraster passt nicht zum Vorlauf")
+        col.W[i0:i1] = W_c
+        col.T[i0:i1] = T_c
+        col.T[i1:] = T_c[-1]
+        col.reset_moisture()
     att = Attic(cfg["attic"], T0=cfg["init"]["T0"], phi0=cfg["init"]["phi0_other"])
     if attic_measured is not None:
         att.Ta, att.pa = Ta_meas[0], pa_meas[0]

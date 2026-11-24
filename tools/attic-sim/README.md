@@ -379,6 +379,58 @@ Was sich daraus ablesen lässt, unter Vorbehalt der Annahmen:
    Wie oft das eintritt, hängt stark von der Raumfeuchte ab: Lüftung,
    Personen, Entfeuchtung.
 
+## Studie: Welche Restfeuchte des Betons beim Einbringen der Zellulose?
+
+Für alle Läufe gilt:
+
+- Zellulose wird trocken eingebracht (60 % r.F.)
+- Kühlung ohne Taupunktwächter
+- Spreizung 3 K, R_pipe = 0,03
+- Auswertung Juni–September 2024
+- zusätzlich ein Lauf mit Außentaupunkt + 1,5 K als Ersatz für geglättete Spitzen
+
+Abkürzungen: r.F. = relative Luftfeuchte, Td = Taupunkt, VL = Vorlauftemperatur.
+
+**a) Gleichmäßige Betonfeuchte beim Einbau am 1.5.** (`studies/restfeuchte_sweep.py`), Vorlauf 18 °C:
+
+| Betonfeuchte (gleichmäßig) | Zellulose unten max. r.F. (Std. ≥ 80 %), Wetter gemessen | dto., Td + 1,5 K |
+|---|---|---|
+| 75 % | 79 % (0) | 83 % (606) |
+| 80 % | 80 % (0) | 84 % (823) |
+| 85 % | 81 % (124) | 85 % (1217) |
+| 90 % | 82 % (581) | 87 % (1510) |
+| 95 % | 84 % (1037) | 88 % (1654) |
+
+Mit Td + 1,5 K reichen selbst 60 % Betonfeuchte nicht für 0 Stunden (22 h).
+Dafür braucht es einen höheren Vorlauf: Bei 70 % Betonfeuchte genügen
+19 °C, bei 80 % genügen 20 °C.
+
+**b) Realer Plan: Decke bleibt bis 1.5. offen, dann Zellulose**
+(`studies/einbau_mai.py`). Gerechnet ist der Feuchteverlauf im Beton beim
+Einbau. Laut Modell ist dann nur die Oberfläche abgetrocknet:
+
+| | 1 cm | 2 cm | 4 cm | 8 cm Tiefe |
+|---|---|---|---|---|
+| Beton (Standard) | 61 % | 83 % | 96 % | 97 % |
+| Beton mit Kapillar-Näherung | 55 % | 66 % | 85 % | 96 % |
+
+| Fall | Zellulose unten max. r.F. (Std. ≥ 80 %) |
+|---|---|
+| VL 16 °C, Wetter gemessen | 84 % (666) |
+| VL 18 °C, Wetter gemessen | 79 % (0) |
+| VL 18 °C, Td + 1,5 K | 82–83 % (496–625) |
+| VL 20 °C, Td + 1,5 K | 78 % (0) |
+
+Was sich daraus ablesen lässt, unter Vorbehalt der Annahmen:
+
+1. Den Beton bis Mai 2027 über die ganze Dicke auf ≤ 80 % r.F. zu bringen,
+   ist laut Modell **unrealistisch**. Der Kern bleibt bei ca. 96 %.
+2. Im ersten Sommer zählt vor allem die **oberste Betonzone (ca. 0–4 cm)**,
+   kaum der Kern. Mit dem Feuchteverlauf vom 1.5. und 18 °C Vorlauf bleibt
+   die Zellulose bei gemessenem Wetter unter 80 %.
+3. Für sehr schwüle Phasen braucht es zusätzlich eine Betriebsregel: an
+   Tagen mit hohem Taupunkt **Vorlauf ca. 20 °C**.
+
 ## Empfohlene Messungen (z. B. mit ESPHome)
 
 1. Einen Temperatur-/Feuchtesensor **auf die Betonoberseite unter die Dämmung**
