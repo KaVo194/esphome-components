@@ -326,6 +326,59 @@ Was sich daraus ablesen lässt, unter Vorbehalt der Annahmen:
    zulassen (Wärmeschutz der obersten Geschossdecke), muss eine Fachplanung
    prüfen.
 
+## Studie: Ab welcher Vorlauftemperatur entsteht Tauwasser? (trockene Decke)
+
+Grundlage ist das Modell mit dem Bauablauf oben:
+
+- 30 cm Zellulose
+- Beton **trocken** (Startfeuchte 75 %)
+- Wetter 2023/24, ausgewertet Juni–September 2024
+- **ohne Taupunktwächter**
+- Spreizung 3 K, also mittlere Wassertemperatur = Vorlauf + 1,5 K (Annahme)
+- guter Wärmeübergang von den Rohren in den Beton (R_pipe = 0,03)
+
+Weil die Stundenwerte aus Tageswerten genähert sind, wurde zusätzlich mit
+einem um 1,5 K erhöhten Außentaupunkt gerechnet. Skript:
+`studies/vorlauf_sweep.py`.
+
+Abkürzungen in der Tabelle: VL = Vorlauftemperatur, r.F. = relative
+Luftfeuchte, Td = Taupunkt.
+
+| VL | Betonoberseite | Zellulose unten: max. r.F. (Std. ≥ 80 %) | Tauwasser in der Zellulose | Std. Td Raum > Deckenunterseite (Raumseite!) |
+|---|---|---|---|---|
+| 18 °C | 20,5 °C | 75 % (0) / 80 % (0) | 0 / 0 | 47 / 228 |
+| 17 °C | 19,7 °C | 78 % (0) / 83 % (562) | 0 / 0 | 119 / 355 |
+| 16 °C | 18,9 °C | 80 % (2) / 85 % (785) | 0 / 0 | 211 / 519 |
+| 15 °C | 18,1 °C | 83 % (567) / 88 % (1428) | 0 / 0 | 332 / 750 |
+| 14 °C | 17,3 °C | 85 % (771) / 91 % (1564) | 0 / 0 | 487 / 953 |
+| 12 °C | 15,7 °C | 91 % (1564) / 96 % (2156) | 0 / 0 | 937 / 1455 |
+| 11 °C | 14,9 °C | – / 99 % (2354) | – / 0 | – / 1642 |
+| 10 °C | 14,1 °C | 96 % (2142) / 100 % | 0 / **40 g/m²** | 1431 / 1835 |
+| 9 °C | 13,3 °C | 99 % (2306) / – | 0 / – | 1627 / – |
+| 8 °C | 12,4 °C | 100 % / – | **38 g/m²** / – | 1828 / – |
+| 7 °C | 11,6 °C | 100 % / – | **146 g/m²** / – | 1977 / – |
+
+Jeweils: Wetter 2024 wie gemessen / Außentaupunkt + 1,5 K; „–“ = nicht gerechnet.
+
+Was sich daraus ablesen lässt, unter Vorbehalt der Annahmen:
+
+1. **Freies Tauwasser im Dachraum** (in der untersten Zelluloselage) entsteht
+   bei trockener Decke erst unter ca. **9 °C Vorlauf**. Mit erhöhtem
+   Taupunkt sind es ca. **11 °C**. So tief liegt die Grenze, weil Beton und
+   Zellulose viel Feuchte aufnehmen, bevor flüssiges Wasser entsteht.
+2. **Über 80 % r.F.** an der Zellulose-Unterseite über Hunderte Stunden
+   treten schon deutlich früher auf: ab ca. **15 °C Vorlauf**, mit erhöhtem
+   Taupunkt ab ca. **17 °C**. Für die organische Zellulose ist diese Grenze
+   die relevantere.
+3. **Ohne Taupunktwächter begrenzt die Raumseite, nicht der Dachraum.**
+   Schon bei 18 °C Vorlauf liegt der Taupunkt der Raumluft im Modell über 47
+   bzw. 228 Stunden über der Temperatur der Deckenunterseite. Angenommen ist
+   dabei, dass die Raumluft so feucht ist wie außen plus 150 Pa. Dann droht
+   Tauwasser an der Deckenunterseite im Wohnraum. Im Beton unterhalb der
+   Rohrebene sammelt sich rechnerisch ab ca. 12–15 °C Vorlauf freies Wasser.
+   Wie oft das eintritt, hängt stark von der Raumfeuchte ab: Lüftung,
+   Personen, Entfeuchtung.
+
 ## Empfohlene Messungen (z. B. mit ESPHome)
 
 1. Einen Temperatur-/Feuchtesensor **auf die Betonoberseite unter die Dämmung**
